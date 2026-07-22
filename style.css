@@ -1,0 +1,115 @@
+/* =======================================================
+   1. GLOBAL LAYOUT & UTILITIES
+   ======================================================= */
+/* Pastikan setiap view memiliki tinggi penuh dan tidak ada ruang kosong berlebih di atas */
+.view-section {
+    min-height: 100vh;
+    padding-top: 0 !important; 
+}
+
+/* Utilitas untuk menyembunyikan scrollbar tapi tetap bisa di-scroll */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+
+/* =======================================================
+   2. FULLCALENDAR: PROFESSIONAL LOOK (KOTAK-KOTAK RAPI)
+   ======================================================= */
+/* Menghilangkan Border Ganda & Membuat Kotak Rapi */
+.fc .fc-scrollgrid {
+    border: 1px solid #e5e7eb !important; 
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Memberi Tinggi pada Baris Kalender (Agar Kotak Terlihat Luas & Tidak Terpotong) */
+.fc .fc-daygrid-day {
+    min-height: 120px; 
+}
+
+/* Mempercantik Header Hari (Sun, Mon, Tue...) */
+.fc .fc-col-header-cell {
+    background-color: #f9fafb;
+    padding: 10px 0;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+/* Merapikan Nomor Tanggal */
+.fc .fc-daygrid-day-number {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 8px;
+}
+
+
+/* =======================================================
+   3. FULLCALENDAR: POSITION FIX (TARIK KE ATAS)
+   ======================================================= */
+/* Rapatkan container kalender ke judul halaman */
+#viewCalendar {
+    padding-top: 10px !important; 
+}
+
+/* Hapus margin bawah toolbar bawaan FullCalendar yang sering bikin jarak jauh */
+.fc .fc-toolbar {
+    margin-bottom: 5px !important; 
+}
+
+/* Tarik kalender secara agresif ke atas (Ubah angka ini jika masih kurang/terlalu atas) */
+#calendar {
+    margin-top: -10px !important; 
+}
+
+
+/* =======================================================
+   4. DARK MODE SUPPORT UNTUK KALENDER
+   ======================================================= */
+.dark .fc .fc-col-header-cell {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+.dark .fc .fc-scrollgrid {
+    border-color: #374151 !important;
+}
+.dark .fc .fc-daygrid-day-number {
+    color: #e5e7eb;
+}
+.dark .fc-theme-standard td, 
+.dark .fc-theme-standard th {
+    border-color: #374151 !important;
+}
+.dark .fc .fc-button-primary {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+}
+/* --- TAMBAHKAN INI DI BARIS BAWAH STYLE.CSS --- */
+
+/* Desain Label Event (Kegiatan) di Kalender */
+.fc-event {
+    border-radius: 6px !important; /* Membuat sudut event membulat */
+    border: none !important; /* Hilangkan garis pinggir kaku */
+    padding: 3px 6px !important; /* Ruang lega di dalam label */
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    margin-bottom: 3px !important; /* Jarak antar event jika ada 2 event di hari yang sama */
+}
+
+/* Efek saat event disentuh mouse */
+.fc-event:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Menyembunyikan titik waktu bawaan kalender agar lebih bersih */
+.fc-event-time {
+    display: none !important;
+}

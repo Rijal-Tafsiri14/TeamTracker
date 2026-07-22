@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memuat... - Team Progress Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { primary: '#3b82f6', dark: '#0f172a' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-dark min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-pulse"></div>
+
+    <div class="z-10 flex flex-col items-center">
+        <div class="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin mb-4"></div>
+        <h1 class="text-xl font-bold text-gray-800 dark:text-white">Enterprise Portal</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Mengecek sesi otorisasi...</p>
+    </div>
+
+    <script>
+        // Inisialisasi Dark Mode
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Logic Routing Otomatis
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const activeUser = sessionStorage.getItem('activeUser');
+                if (activeUser) {
+                    window.location.replace('dashboard.html');
+                } else {
+                    window.location.replace('login.html');
+                }
+            }, 500); 
+        });
+    
+    </script>
+    <script type="module" src="login.js"></script>
+</body>
+</html>
