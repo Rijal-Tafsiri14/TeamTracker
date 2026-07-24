@@ -128,8 +128,8 @@ const chartLine = new Chart(document.getElementById('chartLine').getContext('2d'
     options: commonOptions
 });
 
-// Penambahan Label Tim Baru: Retail & Marketing (Total 6 Tim)
-const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Retail', 'Marketing'];
+// Penambahan Label Tim Baru: Retail & Return (Total 6 Tim)
+const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Retail', 'Return'];
 const chartColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
 
 const chartDoughnut = new Chart(document.getElementById('chartDoughnut').getContext('2d'), {
@@ -187,8 +187,8 @@ function updateDashboardMetrics() {
     let uniqueTeams = new Set();
     let uniquePics = new Set();
     
-    // Mapping dengan penambahan Retail & Marketing
-    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Retail': 4, 'Marketing': 5 };
+    // Mapping dengan penambahan Retail & Return
+    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Retail': 4, 'Return': 5 };
     
     // Array dirubah menjadi 6 item (menyesuaikan jumlah list tim di mapping)
     const chartBarData = { 'Belum Dimulai': [0,0,0,0,0,0], 'On Progress': [0,0,0,0,0,0], 'Review': [0,0,0,0,0,0], 'Completed': [0,0,0,0,0,0] };
