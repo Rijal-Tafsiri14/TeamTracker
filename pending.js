@@ -64,6 +64,8 @@ onSnapshot(q, (snapshot) => {
         const pendingID = `PND-${id.substring(0, 6).toUpperCase()}`; // Bikin ID Cantik
 
         const card = document.createElement('div');
+        // Menambahkan atribut data-team untuk mempermudah filter dropdown
+        card.setAttribute('data-team', (data.team || '').toLowerCase());
         card.className = "bg-white dark:bg-darkBox p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all flex flex-col";
         card.innerHTML = `
             <div class="flex justify-between items-start mb-3">
@@ -216,20 +218,32 @@ document.getElementById('btnSavePendingUpdate').addEventListener('click', async 
 // ==========================================
 const searchInput = document.getElementById('searchPending');
 const filterStatus = document.getElementById('filterStatus');
+const filterTeam = document.getElementById('filterTeam'); // Menambahkan elemen dropdown tim
 
 function filterData() {
     const searchTerm = searchInput.value.toLowerCase();
     const statusTerm = filterStatus.value.toLowerCase();
+    const teamTerm = filterTeam ? filterTeam.value.toLowerCase() : 'all'; // Default 'all' jika belum dirender
+
     const cards = container.children;
 
     Array.from(cards).forEach(card => {
+        // Ambil data dari masing-masing card
         const text = card.textContent.toLowerCase();
         const status = card.querySelector('span').textContent.toLowerCase();
+        const cardTeam = card.getAttribute('data-team') || ''; // Membaca atribut tim dari elemen HTML
+
+        // Kondisi pencocokan
         const matchesSearch = text.includes(searchTerm);
         const matchesStatus = statusTerm === 'all' || status.includes(statusTerm);
-        card.style.display = (matchesSearch && matchesStatus) ? 'flex' : 'none';
+        const matchesTeam = teamTerm === 'all' || cardTeam === teamTerm;
+
+        // Card akan ditampilkan jika SEMUA kondisi filter terpenuhi
+        card.style.display = (matchesSearch && matchesStatus && matchesTeam) ? 'flex' : 'none';
     });
 }
 
+// Mendaftarkan event listener agar fungsi filter berjalan saat ada perubahan
 searchInput.addEventListener('input', filterData);
 filterStatus.addEventListener('change', filterData);
+if (filterTeam) filterTeam.addEventListener('change', filterData);
