@@ -20,6 +20,10 @@ const btnTambahProject = document.getElementById('btnTambahProject');
 const modalAddProject = document.getElementById('modalAddProject');
 const modalEditProject = document.getElementById('modalEditProject');
 
+// Referensi Filter Dropdown
+const filterTeamProj = document.getElementById('filterTeamProject');
+const filterStatusProj = document.getElementById('filterStatusProject');
+
 // ==========================================
 // 3. FITUR READ DATA (REALTIME & BATASAN AKSES TOMBOL)
 // ==========================================
@@ -27,13 +31,16 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
     tableProjectBody.innerHTML = '';
 
     if (snapshot.empty) {
-        tableProjectBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500">Belum ada data project.</td></tr>`;
+        tableProjectBody.innerHTML = `<tr class="empty-row"><td colspan="6" class="p-8 text-center text-gray-500">Belum ada data project.</td></tr>`;
         return;
     }
 
     snapshot.forEach((docSnap) => {
         const id = docSnap.id;
         const data = docSnap.data();
+
+        // FORMAT ID CANTIK & SINKRON
+        const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
 
         // Variabel untuk menampung tombol aksi
         let actionButtons = '';
@@ -62,9 +69,18 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
 
         // Render Baris Tabel
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors";
+        tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors project-row";
+        
+        // TANAMKAN ATRIBUT UNTUK DIBACA OLEH FITUR FILTER
+        tr.setAttribute('data-team', (data.team || '').toLowerCase());
+        tr.setAttribute('data-status', (data.status || 'Belum Dimulai').toLowerCase());
+
         tr.innerHTML = `
-            <td class="p-4 align-top font-medium text-gray-900 dark:text-white">${id.substring(0, 8).toUpperCase()}</td>
+            <td class="p-4 align-top font-bold text-blue-600 dark:text-blue-400">
+                <span class="bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20 whitespace-nowrap">
+                    <i class="fa-solid fa-hashtag mr-1"></i>${displayId}
+                </span>
+            </td>
             <td class="p-4 align-top">
                 <p class="font-bold text-gray-800 dark:text-white mb-1">${data.name}</p>
                 <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md font-medium">${data.category}</span>
@@ -93,12 +109,14 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
                 <p class="text-xs text-gray-500 font-medium text-right">${data.progress || 0}%</p>
             </td>
             <td class="p-4 align-top">
-                <!-- INI ADALAH TEMPAT TOMBOL AKSI YANG SUDAH KITA FILTER DI ATAS -->
                 ${actionButtons}
             </td>
         `;
         tableProjectBody.appendChild(tr);
     });
+
+    // Panggil fungsi filter setiap kali data selesai dirender (agar filter tidak reset saat ada data baru)
+    filterDataProject();
 });
 
 
@@ -165,7 +183,6 @@ if (formAddProject) {
 
 // Fungsi Buka Modal Edit
 window.openEditProject = (id, currentProgress, currentStatus) => {
-    // Pengamanan Ekstra: Jika entah bagaimana user biasa berhasil memanggil fungsi ini, blokir!
     if (!canEdit) {
         Swal.fire('Akses Ditolak', 'Hanya SPV dan Leader Central yang dapat mengedit data.', 'error');
         return;
@@ -184,7 +201,7 @@ document.querySelectorAll('#modalEditProject .modal-backdrop').forEach(el => {
 
 // Fungsi Simpan Update
 document.getElementById('btnSaveUpdate')?.addEventListener('click', async () => {
-    if (!canEdit) return; // Pengamanan Ekstra
+    if (!canEdit) return;
 
     const id = document.getElementById('editProjId').value;
     const newProgress = document.getElementById('editProgress').value;
@@ -196,8 +213,9 @@ document.getElementById('btnSaveUpdate')?.addEventListener('click', async () => 
             status: newStatus
         });
         
-        // LOG ACTIVITY: UPDATE
-        await logActivity('UPDATE', 'Project', `Memperbarui progress/status pada Project ID: ${id}`);
+        // LOG ACTIVITY: UPDATE (Menggunakan ID yang sudah dipercantik)
+        const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
+        await logActivity('UPDATE', 'Project', `Memperbarui progress/status pada Project ID: ${displayId}`);
 
         Swal.fire({ icon: 'success', title: 'Diperbarui', showConfirmButton: false, timer: 1500 });
         modalEditProject.classList.add('hidden');
@@ -227,8 +245,9 @@ window.deleteProject = async (id) => {
         try {
             await deleteDoc(doc(db, "projects", id));
             
-            // LOG ACTIVITY: DELETE
-            await logActivity('DELETE', 'Project', `Menghapus Project ID: ${id}`);
+            // LOG ACTIVITY: DELETE (Menggunakan ID yang sudah dipercantik)
+            const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
+            await logActivity('DELETE', 'Project', `Menghapus Project ID: ${displayId}`);
 
             Swal.fire({ icon: 'success', title: 'Terhapus', showConfirmButton: false, timer: 1500 });
         } catch (error) {
@@ -236,3 +255,28 @@ window.deleteProject = async (id) => {
         }
     }
 };
+
+// ==========================================
+// 6. FITUR FILTER & SEARCH PROJECT
+// ==========================================
+function filterDataProject() {
+    const teamTerm = filterTeamProj ? filterTeamProj.value.toLowerCase() : 'all';
+    const statusTerm = filterStatusProj ? filterStatusProj.value.toLowerCase() : 'all';
+    
+    const rows = document.querySelectorAll('#tableProjectBody .project-row');
+
+    Array.from(rows).forEach(row => {
+        const rowTeam = row.getAttribute('data-team') || '';
+        const rowStatus = row.getAttribute('data-status') || '';
+
+        const matchesTeam = teamTerm === 'all' || rowTeam === teamTerm;
+        const matchesStatus = statusTerm === 'all' || rowStatus === statusTerm;
+
+        // Menggunakan table-row agar struktur tabel tidak rusak saat di-show
+        row.style.display = (matchesTeam && matchesStatus) ? 'table-row' : 'none';
+    });
+}
+
+// Menjalankan fungsi filter jika dropdown berubah nilainya
+if (filterTeamProj) filterTeamProj.addEventListener('change', filterDataProject);
+if (filterStatusProj) filterStatusProj.addEventListener('change', filterDataProject);
