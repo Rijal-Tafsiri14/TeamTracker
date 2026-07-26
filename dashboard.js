@@ -1,5 +1,5 @@
 import { db } from './firebase.js';
-import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // 1. SESSION MANAGEMENT & UI
@@ -128,8 +128,8 @@ const chartLine = new Chart(document.getElementById('chartLine').getContext('2d'
     options: commonOptions
 });
 
-// Penambahan Label Tim Baru: Retail & Return (Total 6 Tim)
-const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Retail', 'Return'];
+// Penambahan Label Tim Baru: Retail & Marketing (Total 6 Tim)
+const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Return', 'Marketing'];
 const chartColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
 
 const chartDoughnut = new Chart(document.getElementById('chartDoughnut').getContext('2d'), {
@@ -187,8 +187,8 @@ function updateDashboardMetrics() {
     let uniqueTeams = new Set();
     let uniquePics = new Set();
     
-    // Mapping dengan penambahan Retail & Return
-    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Retail': 4, 'Return': 5 };
+    // Mapping dengan penambahan Retail & Marketing
+    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Return': 4, 'Marketing': 5 };
     
     // Array dirubah menjadi 6 item (menyesuaikan jumlah list tim di mapping)
     const chartBarData = { 'Belum Dimulai': [0,0,0,0,0,0], 'On Progress': [0,0,0,0,0,0], 'Review': [0,0,0,0,0,0], 'Completed': [0,0,0,0,0,0] };
@@ -198,7 +198,7 @@ function updateDashboardMetrics() {
     // --- PROSES DATA PROYEK ---
     projects.forEach(p => {
         const status = p.status || 'Belum Dimulai';
-        if (status === 'On Progress') projRun++;
+        if (status === 'On Progress' || status === 'Review') projRun++;
         if (status === 'Completed') projDone++;
         
         // Memastikan perhitungan AVG Progress presisi
@@ -378,13 +378,17 @@ window.showKpiDetail = (kpiId, kpiTitle) => {
     let type = '';
 
     // Tentukan data berdasarkan Card yang diklik
-    if (kpiId === 'kpi-proj-run') { data = rawProjects.filter(p => p.status === 'On Progress'); type = 'project'; }
+    if (kpiId === 'kpi-proj-run') { 
+        // Tambahkan || p.status === 'Review' di sini ya!
+        data = rawProjects.filter(p => p.status === 'On Progress' || p.status === 'Review'); 
+        type = 'project'; 
+    }
     else if (kpiId === 'kpi-proj-done') { data = rawProjects.filter(p => p.status === 'Completed'); type = 'project'; }
     else if (kpiId === 'kpi-pend-open') { data = rawPending.filter(p => !['done', 'selesai', 'completed'].includes((p.status || '').toLowerCase().trim())); type = 'pending'; }
     else if (kpiId === 'kpi-pend-close') { data = rawPending.filter(p => ['done', 'selesai', 'completed'].includes((p.status || '').toLowerCase().trim())); type = 'pending'; }
     else if (kpiId === 'kpi-issue-open') { data = rawIssues.filter(i => !['resolved', 'done', 'selesai'].includes((i.status || '').toLowerCase().trim())); type = 'issue'; }
     else if (kpiId === 'kpi-issue-close') { data = rawIssues.filter(i => ['resolved', 'done', 'selesai'].includes((i.status || '').toLowerCase().trim())); type = 'issue'; }
-    else { return; } // Abaikan card lain yang bukan list
+    else { return; }
 
     // Render Table Header
     if (type === 'project') {
@@ -422,3 +426,114 @@ document.querySelectorAll('.btnCloseDetail, .modal-backdrop-detail').forEach(btn
         if (modal) modal.classList.add('hidden');
     });
 });
+
+// ==========================================
+// 8. FITUR NOTIFIKASI WEB (Realtime dari Activity Log)
+// ==========================================
+const btnNotif = document.getElementById('btnNotif');
+const notifDropdown = document.getElementById('notifDropdown');
+const notifList = document.getElementById('notifList');
+const notifBadge = document.getElementById('notifBadge');
+const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+
+// Buka/Tutup Dropdown Notifikasi
+if (btnNotif && notifDropdown) {
+    btnNotif.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle('hidden');
+    });
+
+    // Tutup dropdown jika user klik di sembarang tempat
+    document.addEventListener('click', (e) => {
+        if (!btnNotif.contains(e.target) && !notifDropdown.contains(e.target)) {
+            notifDropdown.classList.add('hidden');
+        }
+    });
+
+    // Tombol "Lihat Semua Aktivitas" (Arahkan ke Menu Activity Log)
+    document.getElementById('btnViewAllNotif').addEventListener('click', (e) => {
+        e.preventDefault();
+        notifDropdown.classList.add('hidden');
+        
+        const activityMenu = Array.from(document.querySelectorAll('aside nav a')).find(a => a.textContent.includes('Activity Log'));
+        if(activityMenu) activityMenu.click();
+    });
+
+    // Simpan kapan terakhir user melihat notifikasi di Local Storage browser
+    let lastReadTime = localStorage.getItem('lastReadNotif') || 0;
+
+    // Tarik 10 aktivitas terakhir dari collection 'activities'
+    // (Pastikan nama collection ini sama dengan yang ada di file activity.js Anda)
+    const qNotif = query(collection(db, "activities"), orderBy("timestamp", "desc"), limit(10));
+    
+    onSnapshot(qNotif, (snapshot) => {
+        notifList.innerHTML = '';
+        let hasNew = false;
+        
+        if (snapshot.empty) {
+            notifList.innerHTML = '<div class="p-8 text-center text-sm text-gray-500">Belum ada aktivitas.</div>';
+            notifBadge.classList.add('hidden');
+            return;
+        }
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            // Ambil waktu data dibuat (fallback ke waktu sekarang jika kosong)
+            const timeMs = data.timestamp ? data.timestamp.toMillis() : Date.now();
+            
+            // Cek apakah aktivitas ini terjadi SETELAH user terakhir klik "Tandai dibaca"
+            const isNew = timeMs > lastReadTime;
+            if (isNew) hasNew = true;
+
+            // Format Jam & Tanggal
+            const dateObj = data.timestamp ? data.timestamp.toDate() : new Date();
+            const timeString = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute:'2-digit' });
+            const dateString = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+            // Styling berdasarkan jenis aktivitas
+            let icon = 'fa-bell';
+            let color = 'text-gray-500';
+            let bg = 'bg-gray-100 dark:bg-gray-800';
+
+            if (data.action === 'CREATE') { icon = 'fa-plus'; color = 'text-green-500'; bg = 'bg-green-100 dark:bg-green-500/10'; }
+            else if (data.action === 'UPDATE') { icon = 'fa-pen'; color = 'text-blue-500'; bg = 'bg-blue-100 dark:bg-blue-500/10'; }
+            else if (data.action === 'DELETE') { icon = 'fa-trash'; color = 'text-red-500'; bg = 'bg-red-100 dark:bg-red-500/10'; }
+
+            const item = document.createElement('div');
+            // Jika notif baru, background-nya sedikit menyala (orange transparan)
+            item.className = `p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex gap-3 cursor-pointer ${isNew ? 'bg-orange-50/50 dark:bg-orange-500/5' : ''}`;
+            
+            item.innerHTML = `
+                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${bg} ${color}">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-gray-800 dark:text-gray-200 line-clamp-2 leading-snug">
+                        <span class="font-bold">${data.user || 'Sistem'}</span> ${data.details || 'Melakukan perubahan'}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">${dateString}, ${timeString} • Modul ${data.module}</p>
+                </div>
+                ${isNew ? '<div class="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0 indicator-dot"></div>' : ''}
+            `;
+            notifList.appendChild(item);
+        });
+
+        // Tampilkan/Sembunyikan titik merah di lonceng header
+        if (hasNew) notifBadge.classList.remove('hidden');
+        else notifBadge.classList.add('hidden');
+    });
+
+    // Fitur "Tandai Dibaca"
+    btnMarkAllRead.addEventListener('click', () => {
+        lastReadTime = Date.now();
+        localStorage.setItem('lastReadNotif', lastReadTime);
+        notifBadge.classList.add('hidden');
+        
+        // Hapus styling "baru" (hilangkan warna & titik merah) secara visual
+        document.querySelectorAll('#notifList > div').forEach(el => {
+            el.classList.remove('bg-orange-50/50', 'dark:bg-orange-500/5');
+            const dot = el.querySelector('.indicator-dot');
+            if(dot) dot.remove();
+        });
+    });
+}
