@@ -21,6 +21,10 @@ const formEdit = document.getElementById('formEditIssue');
 const modalEdit = document.getElementById('modalEditIssue');
 const backdropEdit = document.querySelector('.modal-backdrop-edit-issue');
 
+// Referensi Filter Dropdown
+const filterTeamIssue = document.getElementById('filterTeamIssue');
+const filterStatusIssue = document.getElementById('filterStatusIssue');
+
 // 1. Logika Tampil/Sembunyi Modal Add
 if (btnOpenModal) btnOpenModal.addEventListener('click', () => modalIssue.classList.remove('hidden'));
 if (backdrop) backdrop.addEventListener('click', () => modalIssue.classList.add('hidden'));
@@ -34,8 +38,14 @@ onSnapshot(q, (snapshot) => {
     container.innerHTML = ''; 
     snapshot.forEach(docSnap => {
         const data = docSnap.data();
+        const id = docSnap.id;
+        
         const card = document.createElement('div');
         card.className = "bg-white dark:bg-darkBox p-5 rounded-xl border-l-4 border-red-500 shadow-sm flex flex-col justify-between";
+        
+        // TANAMKAN ATRIBUT UNTUK DIBACA OLEH FITUR FILTER
+        card.setAttribute('data-team', (data.team || '').toLowerCase());
+        card.setAttribute('data-status', (data.status || 'open').toLowerCase());
         
         // Warna Badge Status
         let statusColor = "bg-red-100 text-red-600";
@@ -53,10 +63,10 @@ onSnapshot(q, (snapshot) => {
         if (canEdit) {
             actionButtons = `
                 <div class="flex gap-3">
-                    <button onclick="window.bukaModalEdit('${docSnap.id}')" class="text-gray-400 hover:text-blue-500 transition-colors" title="Edit Issue">
+                    <button onclick="window.bukaModalEdit('${id}')" class="text-gray-400 hover:text-blue-500 transition-colors" title="Edit Issue">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
-                    <button onclick="window.hapusIssue('${docSnap.id}')" class="text-gray-400 hover:text-red-500 transition-colors" title="Hapus Issue">
+                    <button onclick="window.hapusIssue('${id}')" class="text-gray-400 hover:text-red-500 transition-colors" title="Hapus Issue">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -69,7 +79,7 @@ onSnapshot(q, (snapshot) => {
             `;
         }
 
-        const issueID = `ISU-${docSnap.id.substring(0, 6).toUpperCase()}`; // Bikin ID Cantik
+        const issueID = `ISU-${id.substring(0, 6).toUpperCase()}`; // Bikin ID Cantik
 
         card.innerHTML = `
             <div>
@@ -112,6 +122,9 @@ onSnapshot(q, (snapshot) => {
 
         container.appendChild(card);
     });
+
+    // Panggil fungsi filter tiap kali data dimuat ulang
+    filterDataIssue();
 });
 
 // ==========================================
@@ -128,7 +141,7 @@ if (formIssue) {
                 team: document.getElementById('issueTeam').value,
                 status: document.getElementById('issueStatus').value,
                 tanggal: document.getElementById('issueTanggal').value, 
-                pic: document.getElementById('issuePIC').value,         
+                pic: document.getElementById('issuePIC').value,        
                 priority: document.getElementById('issuePriority').value, 
                 createdAt: serverTimestamp()
             });
@@ -201,12 +214,13 @@ if (formEdit) {
                 tanggal: document.getElementById('editIssueTanggal').value,
                 pic: document.getElementById('editIssuePIC').value,
                 priority: document.getElementById('editIssuePriority').value,
-                lastUpdate: serverTimestamp() // Tambahan info kapan diedit terakhir
+                lastUpdate: serverTimestamp() 
             });
             
-            // LOG ACTIVITY: UPDATE
+            // LOG ACTIVITY: UPDATE (Menggunakan ID yang sudah dipercantik)
+            const displayId = `ISU-${id.substring(0, 6).toUpperCase()}`;
             const issueUpdate = document.getElementById('editIssueNama').value;
-            await logActivity('UPDATE', 'Issue', `Memperbarui issue: ${issueUpdate}`);
+            await logActivity('UPDATE', 'Issue', `Memperbarui issue ID: ${displayId} (${issueUpdate})`);
 
             Swal.fire({ icon: 'success', title: 'Data Diperbarui!', timer: 1500, showConfirmButton: false });
             modalEdit.classList.add('hidden'); 
@@ -239,8 +253,9 @@ window.hapusIssue = async (id) => {
         try {
             await deleteDoc(doc(db, "issue", id));
             
-            // LOG ACTIVITY: DELETE
-            await logActivity('DELETE', 'Issue', `Menghapus data issue ID: ${id}`);
+            // LOG ACTIVITY: DELETE (Menggunakan ID yang sudah dipercantik)
+            const displayId = `ISU-${id.substring(0, 6).toUpperCase()}`;
+            await logActivity('DELETE', 'Issue', `Menghapus data issue ID: ${displayId}`);
 
             Swal.fire({ icon: 'success', title: 'Terhapus!', timer: 1000, showConfirmButton: false });
         } catch (error) {
@@ -248,3 +263,26 @@ window.hapusIssue = async (id) => {
         }
     }
 };
+
+// ==========================================
+// 8. FITUR FILTER ISSUE (Berdasarkan Dropdown)
+// ==========================================
+function filterDataIssue() {
+    const teamTerm = filterTeamIssue ? filterTeamIssue.value.toLowerCase() : 'all';
+    const statusTerm = filterStatusIssue ? filterStatusIssue.value.toLowerCase() : 'all';
+    
+    const cards = container.children;
+
+    Array.from(cards).forEach(card => {
+        const cardTeam = card.getAttribute('data-team') || '';
+        const cardStatus = card.getAttribute('data-status') || '';
+
+        const matchesTeam = teamTerm === 'all' || cardTeam === teamTerm;
+        const matchesStatus = statusTerm === 'all' || cardStatus === statusTerm;
+
+        card.style.display = (matchesTeam && matchesStatus) ? 'flex' : 'none';
+    });
+}
+
+if (filterTeamIssue) filterTeamIssue.addEventListener('change', filterDataIssue);
+if (filterStatusIssue) filterStatusIssue.addEventListener('change', filterDataIssue);
