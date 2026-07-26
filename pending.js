@@ -86,6 +86,7 @@ onSnapshot(q, (snapshot) => {
 
         const card = document.createElement('div');
         card.setAttribute('data-team', (data.team || '').toLowerCase());
+        card.setAttribute('data-status', status.toLowerCase());
         card.className = "bg-white dark:bg-darkBox p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all flex flex-col";
         card.innerHTML = `
             <div class="flex justify-between items-start mb-3">
@@ -110,6 +111,9 @@ onSnapshot(q, (snapshot) => {
         `;
         container.appendChild(card);
     });
+
+    // Panggil fungsi filter tiap kali data dirender ulang
+    filterData();
 });
 
 // ==========================================
@@ -134,7 +138,11 @@ window.hapusTugas = async (id) => {
     if (result.isConfirmed) {
         try {
             await deleteDoc(doc(db, "pending", id));
-            await logActivity('DELETE', 'Pending', `Menghapus data pending ID: ${id}`);
+            
+            // LOG ACTIVITY: DELETE (Menggunakan ID yang sudah dipercantik)
+            const displayId = `PND-${id.substring(0, 6).toUpperCase()}`;
+            await logActivity('DELETE', 'Pending', `Menghapus data pending ID: ${displayId}`);
+            
             Swal.fire({ icon: 'success', title: 'Terhapus', showConfirmButton: false, timer: 1500 });
         } catch (error) {
             Swal.fire('Error', 'Gagal menghapus data.', 'error');
@@ -185,13 +193,17 @@ window.editTugas = (id, noPo, tgl, team, ket, fu, pic, status) => {
     }
 
     document.getElementById('editPendingId').value = id;
-    document.getElementById('editNoPo').value = (noPo !== 'undefined' && noPo !== 'null') ? noPo : '';
+    
+    // Menghilangkan &quot; kembali menjadi kutip (jika sebelumnya lolos ke atribut HTML)
+    const unescapeHTML = (str) => String(str).replace(/&quot;/g, '"');
+
+    document.getElementById('editNoPo').value = (noPo !== 'undefined' && noPo !== 'null') ? unescapeHTML(noPo) : '';
     document.getElementById('editTanggal').value = (tgl !== 'undefined' && tgl !== 'null') ? tgl : '';
-    document.getElementById('editTeam').value = (team !== 'undefined' && team !== 'null') ? team : '';
-    document.getElementById('editKeterangan').value = (ket !== 'undefined' && ket !== 'null') ? ket : '';
-    document.getElementById('editFollowUp').value = (fu !== 'undefined' && fu !== 'null') ? fu : '';
-    document.getElementById('editPicProduct').value = (pic !== 'undefined' && pic !== 'null') ? pic : '';
-    document.getElementById('editPendingStatus').value = (status !== 'undefined' && status !== 'null') ? status : 'Pending';
+    document.getElementById('editTeam').value = (team !== 'undefined' && team !== 'null') ? unescapeHTML(team) : '';
+    document.getElementById('editKeterangan').value = (ket !== 'undefined' && ket !== 'null') ? unescapeHTML(ket) : '';
+    document.getElementById('editFollowUp').value = (fu !== 'undefined' && fu !== 'null') ? unescapeHTML(fu) : '';
+    document.getElementById('editPicProduct').value = (pic !== 'undefined' && pic !== 'null') ? unescapeHTML(pic) : '';
+    document.getElementById('editPendingStatus').value = (status !== 'undefined' && status !== 'null') ? unescapeHTML(status) : 'Pending';
     
     modalEdit.classList.remove('hidden');
 };
@@ -215,8 +227,10 @@ document.getElementById('btnSavePendingUpdate').addEventListener('click', async 
             lastUpdate: serverTimestamp()
         });
         
+        // LOG ACTIVITY: UPDATE (Menggunakan ID yang sudah dipercantik)
+        const displayId = `PND-${id.substring(0, 6).toUpperCase()}`;
         const noPoUpdate = document.getElementById('editNoPo').value || 'Tanpa PO';
-        await logActivity('UPDATE', 'Pending', `Memperbarui data pending (PO: ${noPoUpdate})`);
+        await logActivity('UPDATE', 'Pending', `Memperbarui data pending ID: ${displayId} (PO: ${noPoUpdate})`);
 
         modalEdit.classList.add('hidden');
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Data diupdate', showConfirmButton: false, timer: 1500 });
@@ -226,32 +240,36 @@ document.getElementById('btnSavePendingUpdate').addEventListener('click', async 
 });
 
 // ==========================================
-// 7. FITUR FILTER & SEARCH
+// 7. FITUR FILTER (Prioritas Dropdown)
 // ==========================================
 const searchInput = document.getElementById('searchPending');
 const filterStatus = document.getElementById('filterStatus');
 const filterTeam = document.getElementById('filterTeam'); 
 
 function filterData() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const statusTerm = filterStatus.value.toLowerCase();
+    // Jika input pencarian sudah dihapus dari HTML, kita set default value-nya kosong
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const statusTerm = filterStatus ? filterStatus.value.toLowerCase() : 'all';
     const teamTerm = filterTeam ? filterTeam.value.toLowerCase() : 'all'; 
 
     const cards = container.children;
 
     Array.from(cards).forEach(card => {
         const text = card.textContent.toLowerCase();
-        const status = card.querySelector('span').textContent.toLowerCase();
+        
+        // Membaca dari atribut data- yang lebih akurat
         const cardTeam = card.getAttribute('data-team') || ''; 
+        const cardStatus = card.getAttribute('data-status') || ''; 
 
-        const matchesSearch = text.includes(searchTerm);
-        const matchesStatus = statusTerm === 'all' || status.includes(statusTerm);
+        const matchesSearch = searchTerm === '' || text.includes(searchTerm);
+        const matchesStatus = statusTerm === 'all' || cardStatus.includes(statusTerm);
         const matchesTeam = teamTerm === 'all' || cardTeam === teamTerm;
 
         card.style.display = (matchesSearch && matchesStatus && matchesTeam) ? 'flex' : 'none';
     });
 }
 
-searchInput.addEventListener('input', filterData);
-filterStatus.addEventListener('change', filterData);
+// Tambahkan event listener dengan pengaman (jika elemennya ada di HTML)
+if (searchInput) searchInput.addEventListener('input', filterData);
+if (filterStatus) filterStatus.addEventListener('change', filterData);
 if (filterTeam) filterTeam.addEventListener('change', filterData);
