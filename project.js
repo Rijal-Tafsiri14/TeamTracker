@@ -1,14 +1,12 @@
 import { logActivity } from './activity.js';
 import { db } from './firebase.js';
-import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// Tambahkan getDoc di import atas
+import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
 // 1. PENGECEKAN HAK AKSES (ROLE-BASED ACCESS)
 // ==========================================
-// Ambil role user yang sedang login dari LocalStorage
 const userRole = localStorage.getItem('userRole');
-
-// Buat aturan: canEdit akan bernilai TRUE hanya jika role adalah SPV atau Leader Central
 const canEdit = (userRole === 'Leader Central' || userRole === 'SPV');
 
 // ==========================================
@@ -20,12 +18,11 @@ const btnTambahProject = document.getElementById('btnTambahProject');
 const modalAddProject = document.getElementById('modalAddProject');
 const modalEditProject = document.getElementById('modalEditProject');
 
-// Referensi Filter Dropdown
 const filterTeamProj = document.getElementById('filterTeamProject');
 const filterStatusProj = document.getElementById('filterStatusProject');
 
 // ==========================================
-// 3. FITUR READ DATA (REALTIME & BATASAN AKSES TOMBOL)
+// 3. FITUR READ DATA
 // ==========================================
 onSnapshot(collection(db, "projects"), (snapshot) => {
     tableProjectBody.innerHTML = '';
@@ -39,27 +36,23 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
         const id = docSnap.id;
         const data = docSnap.data();
 
-        // FORMAT ID CANTIK & SINKRON
         const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
 
-        // Variabel untuk menampung tombol aksi
         let actionButtons = '';
 
-        // JIKA USER ADALAH SPV / LEADER CENTRAL -> TAMPILKAN TOMBOL EDIT & HAPUS
         if (canEdit) {
+            // Parameter window.openEditProject sekarang cukup melempar ID saja
             actionButtons = `
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="window.openEditProject('${id}', '${data.progress || 0}', '${data.status || 'Belum Dimulai'}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 w-8 h-8 rounded-lg flex items-center justify-center transition-colors" title="Update Progress">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                    <button onclick="window.openEditProject('${id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-xs font-bold" title="Update Project">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> Update
                     </button>
                     <button onclick="window.deleteProject('${id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg flex items-center justify-center transition-colors" title="Hapus Project">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             `;
-        } 
-        // JIKA BUKAN (CONTOH: STAFF / LEADER DIVISI) -> TAMPILKAN LABEL VIEW ONLY
-        else {
+        } else {
             actionButtons = `
                 <div class="flex items-center justify-center">
                     <span class="text-[10px] font-bold uppercase text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">View Only</span>
@@ -67,11 +60,8 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
             `;
         }
 
-        // Render Baris Tabel
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors project-row";
-        
-        // TANAMKAN ATRIBUT UNTUK DIBACA OLEH FITUR FILTER
         tr.setAttribute('data-team', (data.team || '').toLowerCase());
         tr.setAttribute('data-status', (data.status || 'Belum Dimulai').toLowerCase());
 
@@ -81,10 +71,10 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
                     <i class="fa-solid fa-hashtag mr-1"></i>${displayId}
                 </span>
             </td>
-            <td class="p-4 align-top">
+            <td class="p-4 align-top w-1/3">
                 <p class="font-bold text-gray-800 dark:text-white mb-1">${data.name}</p>
-                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md font-medium">${data.category}</span>
-                <p class="text-xs text-gray-500 mt-2 line-clamp-2">${data.description}</p>
+                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md font-medium inline-block mb-2">${data.category}</span>
+                <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed whitespace-pre-line">${data.description}</p>
             </td>
             <td class="p-4 align-top">
                 <p class="font-semibold text-gray-800 dark:text-gray-200">${data.team}</p>
@@ -115,13 +105,11 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
         tableProjectBody.appendChild(tr);
     });
 
-    // Panggil fungsi filter setiap kali data selesai dirender (agar filter tidak reset saat ada data baru)
     filterDataProject();
 });
 
-
 // ==========================================
-// 4. FITUR CREATE DATA (Semua Role Bisa Akses)
+// 4. FITUR CREATE DATA 
 // ==========================================
 if (btnTambahProject) {
     btnTambahProject.addEventListener('click', () => {
@@ -129,12 +117,10 @@ if (btnTambahProject) {
     });
 }
 
-// Tutup Modal Add
 document.querySelectorAll('#modalAddProject .btnCloseModal, #modalAddProject .modal-backdrop').forEach(el => {
     el.addEventListener('click', () => modalAddProject.classList.add('hidden'));
 });
 
-// Submit Data Baru
 if (formAddProject) {
     formAddProject.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -159,7 +145,6 @@ if (formAddProject) {
                 createdAt: serverTimestamp()
             });
 
-            // LOG ACTIVITY: CREATE
             const namaProj = document.getElementById('projNama').value;
             await logActivity('CREATE', 'Project', `Menambahkan project baru: ${namaProj}`);
 
@@ -167,7 +152,6 @@ if (formAddProject) {
             formAddProject.reset();
             modalAddProject.classList.add('hidden');
         } catch (error) {
-            console.error("Error adding document: ", error);
             Swal.fire('Error', 'Gagal menyimpan data project.', 'error');
         } finally {
             btnSubmit.innerHTML = originalText;
@@ -176,53 +160,90 @@ if (formAddProject) {
     });
 }
 
-
 // ==========================================
-// 5. FITUR UPDATE & DELETE (Terekspos ke Global Window agar HTML onclick bekerja)
+// 5. FITUR UPDATE & DELETE
 // ==========================================
-
-// Fungsi Buka Modal Edit
-window.openEditProject = (id, currentProgress, currentStatus) => {
+// Fungsi Buka Modal Edit (Menarik Data Full dari Firebase)
+window.openEditProject = async (id) => {
     if (!canEdit) {
         Swal.fire('Akses Ditolak', 'Hanya SPV dan Leader Central yang dapat mengedit data.', 'error');
         return;
     }
 
-    document.getElementById('editProjId').value = id;
-    document.getElementById('editProgress').value = currentProgress;
-    document.getElementById('editStatus').value = currentStatus;
-    modalEditProject.classList.remove('hidden');
+    try {
+        const docRef = doc(db, "projects", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            
+            // Masukkan data ke dalam form edit
+            document.getElementById('editProjId').value = id;
+            document.getElementById('editProjNama').value = data.name || '';
+            document.getElementById('editProjDeskripsi').value = data.description || '';
+            document.getElementById('editProjKategori').value = data.category || '';
+            document.getElementById('editProjTeam').value = data.team || '';
+            document.getElementById('editProjPIC').value = data.pic || '';
+            document.getElementById('editProjPriority').value = data.priority || 'Medium';
+            document.getElementById('editProjStartDate').value = data.startDate || '';
+            document.getElementById('editProjEndDate').value = data.endDate || '';
+            document.getElementById('editProjStatus').value = data.status || 'Belum Dimulai';
+            document.getElementById('editProjProgress').value = data.progress || 0;
+            
+            modalEditProject.classList.remove('hidden');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Gagal memuat data project.', 'error');
+    }
 };
 
 // Tutup Modal Edit
-document.querySelectorAll('#modalEditProject .modal-backdrop').forEach(el => {
+document.querySelectorAll('#modalEditProject .btnCloseModal, #modalEditProject .modal-backdrop').forEach(el => {
     el.addEventListener('click', () => modalEditProject.classList.add('hidden'));
 });
 
-// Fungsi Simpan Update
-document.getElementById('btnSaveUpdate')?.addEventListener('click', async () => {
-    if (!canEdit) return;
+// Proses Simpan Perubahan Full Edit
+const formEditProject = document.getElementById('formEditProject');
+if (formEditProject) {
+    formEditProject.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!canEdit) return;
 
-    const id = document.getElementById('editProjId').value;
-    const newProgress = document.getElementById('editProgress').value;
-    const newStatus = document.getElementById('editStatus').value;
+        const id = document.getElementById('editProjId').value;
+        const btnSubmit = document.getElementById('btnSaveUpdateProject');
+        const originalText = btnSubmit.innerHTML;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+        btnSubmit.disabled = true;
 
-    try {
-        await updateDoc(doc(db, "projects", id), {
-            progress: parseFloat(newProgress),
-            status: newStatus
-        });
-        
-        // LOG ACTIVITY: UPDATE (Menggunakan ID yang sudah dipercantik)
-        const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
-        await logActivity('UPDATE', 'Project', `Memperbarui progress/status pada Project ID: ${displayId}`);
+        try {
+            await updateDoc(doc(db, "projects", id), {
+                name: document.getElementById('editProjNama').value,
+                description: document.getElementById('editProjDeskripsi').value,
+                category: document.getElementById('editProjKategori').value,
+                team: document.getElementById('editProjTeam').value,
+                pic: document.getElementById('editProjPIC').value,
+                priority: document.getElementById('editProjPriority').value,
+                startDate: document.getElementById('editProjStartDate').value,
+                endDate: document.getElementById('editProjEndDate').value,
+                status: document.getElementById('editProjStatus').value,
+                progress: parseFloat(document.getElementById('editProjProgress').value),
+                lastUpdate: serverTimestamp()
+            });
+            
+            const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
+            const projNama = document.getElementById('editProjNama').value;
+            await logActivity('UPDATE', 'Project', `Update informasi project ID: ${displayId} (${projNama})`);
 
-        Swal.fire({ icon: 'success', title: 'Diperbarui', showConfirmButton: false, timer: 1500 });
-        modalEditProject.classList.add('hidden');
-    } catch (error) {
-        Swal.fire('Error', 'Gagal memperbarui data.', 'error');
-    }
-});
+            Swal.fire({ icon: 'success', title: 'Data Diperbarui', showConfirmButton: false, timer: 1500 });
+            modalEditProject.classList.add('hidden');
+        } catch (error) {
+            Swal.fire('Error', 'Gagal memperbarui data.', 'error');
+        } finally {
+            btnSubmit.innerHTML = originalText;
+            btnSubmit.disabled = false;
+        }
+    });
+}
 
 // Fungsi Delete
 window.deleteProject = async (id) => {
@@ -245,7 +266,6 @@ window.deleteProject = async (id) => {
         try {
             await deleteDoc(doc(db, "projects", id));
             
-            // LOG ACTIVITY: DELETE (Menggunakan ID yang sudah dipercantik)
             const displayId = `PRJ-${id.substring(0, 6).toUpperCase()}`;
             await logActivity('DELETE', 'Project', `Menghapus Project ID: ${displayId}`);
 
@@ -257,7 +277,7 @@ window.deleteProject = async (id) => {
 };
 
 // ==========================================
-// 6. FITUR FILTER & SEARCH PROJECT
+// 6. FITUR FILTER PROJECT
 // ==========================================
 function filterDataProject() {
     const teamTerm = filterTeamProj ? filterTeamProj.value.toLowerCase() : 'all';
@@ -272,11 +292,9 @@ function filterDataProject() {
         const matchesTeam = teamTerm === 'all' || rowTeam === teamTerm;
         const matchesStatus = statusTerm === 'all' || rowStatus === statusTerm;
 
-        // Menggunakan table-row agar struktur tabel tidak rusak saat di-show
         row.style.display = (matchesTeam && matchesStatus) ? 'table-row' : 'none';
     });
 }
 
-// Menjalankan fungsi filter jika dropdown berubah nilainya
 if (filterTeamProj) filterTeamProj.addEventListener('change', filterDataProject);
 if (filterStatusProj) filterStatusProj.addEventListener('change', filterDataProject);
