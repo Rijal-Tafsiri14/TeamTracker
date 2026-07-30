@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Tracker Management</title>
+    <title>Dashboard - Team Progress Management</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +32,7 @@
             <div class="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 text-primary text-xl font-bold">
                     <i class="fa-solid fa-layer-group"></i>
-                    <span id="logoText">Offline Team </span>
+                    <span id="logoText">Offline Group</span>
                 </div>
             </div>
             <nav class="flex-1 overflow-y-auto no-scrollbar py-4 px-3 space-y-1">
@@ -136,7 +136,7 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
                             <h1 class="text-2xl font-bold mb-1">Overview Performance</h1>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Monitoring operasional Offline Team.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Monitoring operasional harian secara realtime.</p>
                         </div>
                         <!-- Komponen Filter Range Tanggal -->
                         <div class="flex items-center gap-2 bg-white dark:bg-darkBox p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm">
@@ -807,72 +807,113 @@
     </div>
     
     <!-- ========================================== -->
-    <!-- MODAL EDIT PROJECT -->
+    <!-- MODAL EDIT PROJECT (SUDAH DIROMBAK FULL) -->
     <!-- ========================================== -->
-    <div id="modalEditProject" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div id="modalEditProject" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <!-- Backdrop transparan -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm modal-backdrop cursor-pointer"></div>
-        <div class="relative bg-white dark:bg-darkBox w-full max-w-sm p-6 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
-            <h3 class="font-bold text-lg mb-4">Update Progress</h3>
-            <input type="hidden" id="editProjId">
-            <label class="block text-sm font-medium mb-2">Progress (%)</label>
-            <input type="number" id="editProgress" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg mb-4 focus:ring-2 focus:ring-primary outline-none">
-            <label class="block text-sm font-medium mb-2">Status</label>
-            <select id="editStatus" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg mb-6 focus:ring-2 focus:ring-primary outline-none text-gray-700 dark:text-gray-200">
-                <option value="Belum Dimulai">Belum Dimulai</option>
-                <option value="On Progress">On Progress</option>
-                <option value="Review">Review</option>
-                <option value="Completed">Completed</option>
-            </select>
-            <button id="btnSaveUpdate" class="w-full py-3 bg-primary hover:bg-blue-600 text-white rounded-lg font-bold shadow-lg transition-all">Simpan Perubahan</button>
-        </div>
-    </div>
-
-    <!-- Modal Edit User -->
-    <div id="modalEditUser" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-xl">
-            <h2 class="text-xl font-bold mb-4">Edit User</h2>
-            <form id="formEditUser">
-                <input type="hidden" id="editUserId">
+        
+        <!-- Konten Modal -->
+        <div class="relative bg-white dark:bg-darkBox w-full max-w-2xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col">
+            
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 shrink-0 rounded-t-2xl">
+                <h3 class="font-bold text-lg">Update Detail Project</h3>
+                <button type="button" class="btnCloseModal text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="formEditProject" class="p-6 overflow-y-auto flex-1 no-scrollbar">
+                <input type="hidden" id="editProjId">
                 
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Nama</label>
-                    <input type="text" id="editUserName" class="w-full p-2 border rounded" required>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-sm">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1">Nama Project <span class="text-red-500">*</span></label>
+                        <input type="text" id="editProjNama" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1">Deskripsi & Update Terkini <span class="text-red-500">*</span></label>
+                        <textarea id="editProjDeskripsi" required rows="3" placeholder="Tuliskan keterangan detail atau update progress terbaru di sini..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">Kategori</label>
+                        <select id="editProjKategori" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="Improvement Proses Gudang">Improvement Proses Gudang</option>
+                            <option value="Automation Report">Automation Report</option>
+                            <option value="Warehouse Optimization">Warehouse Optimization</option>
+                            <option value="Inventory Management">Inventory Management</option>
+                            <option value="Stock Opname">Stock Opname</option>
+                            <option value="B2B Project">B2B Project</option>
+                            <option value="Bazaar Project">Bazaar Project</option>
+                            <option value="Dropship Project">Dropship Project</option>
+                            <option value="Fulfillment Improvement">Fulfillment Improvement</option>
+                            <option value="Return Management">Return Management</option>
+                            <option value="Packaging Improvement">Packaging Improvement</option>
+                            <option value="SLA Monitoring">SLA Monitoring</option>
+                            <option value="Cost Saving Initiative">Cost Saving Initiative</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">Team</label>
+                        <select id="editProjTeam" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="B2B Outbound">B2B Outbound</option>
+                            <option value="B2B Inbound">B2B Inbound</option>
+                            <option value="Bazaar">Bazaar</option>
+                            <option value="Dropship">Dropship</option>
+                            <option value="Return">Return</option>
+                            <option value="Marketing">Marketing</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">PIC (Penanggung Jawab)</label>
+                        <input type="text" id="editProjPIC" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-medium mb-1">Priority</label>
+                        <select id="editProjPriority" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">Tanggal Mulai</label>
+                        <input type="date" id="editProjStartDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">Tanggal Selesai</label>
+                        <input type="date" id="editProjEndDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+                        <label class="block font-medium mb-1">Status Saat Ini</label>
+                        <select id="editProjStatus" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="Belum Dimulai">Belum Dimulai</option>
+                            <option value="On Progress">On Progress</option>
+                            <option value="Review">Review</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+                        <label class="block font-medium mb-1">Progress Pencapaian (%)</label>
+                        <input type="number" id="editProjProgress" min="0" max="100" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
                 </div>
                 
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Username</label>
-                    <input type="text" id="editUserUsername" class="w-full p-2 border rounded bg-gray-100" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="block text-sm font-medium">Team</label>
-                    <select id="editUserTeam" class="w-full p-2 border rounded" required>
-                        <option value="Bazaar">Bazaar</option>
-                        <option value="B2B Outbound">B2B Outbound</option>
-                        <option value="B2B Inbound">B2B Inbound</option>
-                        <option value="Dropship">Dropship</option>
-                        <option value="Leader Central">Leader Central</option>
-                        <!-- TAMPILAN TIM BARU -->
-                        <option value="Return">Return</option>
-                        <option value="Marketing">Marketing</option>
-                    </select>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium">Role</label>
-                    <select id="editUserRole" class="w-full p-2 border rounded" required>
-                        <option value="Leader Divisi">Leader Divisi</option>
-                        <option value="Leader Central">Leader Central</option>
-                        <option value="SPV">SPV</option>
-                        <!-- TAMPILAN ROLE BARU -->
-                        <option value="Operator">Operator</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button type="button" onclick="document.getElementById('modalEditUser').classList.add('hidden')" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan Perubahan</button>
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4 shrink-0">
+                    <button type="button" class="btnCloseModal px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">Batal</button>
+                    <button type="submit" id="btnSaveUpdateProject" class="px-5 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg font-medium shadow-lg shadow-primary/30 transition-all">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -913,8 +954,8 @@
                         <option value="Leader Central">Leader Central</option>
                         <option value="SPV">SPV</option>
                         <!-- TAMPILAN ROLE BARU -->
-                        <option value="Operator">Operator</option>
-                        <option value="Admin">Admin</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Intern">Intern</option>
                     </select>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
