@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Team Progress Management</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏭</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +32,7 @@
         <aside id="sidebar" class="w-64 bg-white/70 dark:bg-darkBox/70 backdrop-blur-xl border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 z-20 absolute md:relative h-full transform -translate-x-full md:translate-x-0">
             <div class="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 text-primary text-xl font-bold">
-                    <i class="fa-solid fa-layer-group"></i>
+                    <i class="fa-solid fa-boxes-stacked"></i>
                     <span id="logoText">Offline Group</span>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                     <i class="fa-solid fa-key w-5"></i> <span>Ganti Password</span>
                 </button>
                 
-                <!-- Tombol Logout (Sudah ada) -->
+                <!-- Tombol Logout -->
                 <button id="btnLogout" class="flex items-center gap-3 w-full px-3 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
                     <i class="fa-solid fa-arrow-right-from-bracket w-5"></i> <span>Logout</span>
                 </button>
@@ -79,7 +79,6 @@
                 </div>
                 
                 <div class="flex items-center gap-5">
-
                     
                     <div class="text-sm font-medium text-gray-600 dark:text-gray-300 hidden lg:block" id="realtimeClock">00:00:00</div>
                     
@@ -115,7 +114,6 @@
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-bold leading-tight" id="profileName">Loading...</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400" id="profileRole">Role</p>
-                            
                         </div>
                         <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-purple-500 text-white flex items-center justify-center font-bold shadow-md">
                             <span id="profileInitial">A</span>
@@ -139,12 +137,27 @@
                             <h1 class="text-2xl font-bold mb-1">Overview Performance</h1>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Monitoring operasional harian secara realtime.</p>
                         </div>
-                        <!-- Komponen Filter Range Tanggal -->
-                        <div class="flex items-center gap-2 bg-white dark:bg-darkBox p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm">
-                            <input type="date" id="filterStartDate" class="bg-transparent border-none outline-none text-gray-700 dark:text-gray-200 p-1">
+                        <!-- Komponen Filter Range Tanggal & Team -->
+                        <div class="flex flex-wrap items-center gap-2 bg-white dark:bg-darkBox p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-sm">
+                            <!-- Filter Team Dashboard -->
+                            <select id="filterDashboardTeam" class="bg-transparent border-none outline-none text-primary font-bold p-1 cursor-pointer">
+                                <option value="all">Semua Team</option>
+                                <option value="b2b outbound">B2B Outbound</option>
+                                <option value="b2b inbound">B2B Inbound</option>
+                                <option value="bazaar">Bazaar</option>
+                                <option value="dropship">Dropship</option>
+                                <option value="return">Return</option>
+                                <option value="marketing">Marketing</option>
+                            </select>
+                                
+                            <!-- Garis Pemisah -->
+                            <div class="hidden sm:block w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+
+                            <!-- Filter Tanggal Bawaan -->
+                            <input type="date" id="filterStartDate" class="bg-transparent border-none outline-none text-gray-700 dark:text-gray-200 p-1 cursor-pointer">
                             <span class="text-gray-400">s/d</span>
-                            <input type="date" id="filterEndDate" class="bg-transparent border-none outline-none text-gray-700 dark:text-gray-200 p-1">
-                            <button id="btnClearDateFilter" class="text-xs text-red-500 hover:text-red-700 font-semibold px-2">Reset</button>
+                            <input type="date" id="filterEndDate" class="bg-transparent border-none outline-none text-gray-700 dark:text-gray-200 p-1 cursor-pointer">
+                            <button id="btnClearDateFilter" class="text-xs text-red-500 hover:text-red-700 font-semibold px-2 transition-colors">Reset</button>
                         </div>
                     </div>
                     
@@ -305,7 +318,7 @@
                     </div>
                 </div>
 
-                 <!-- View User Management -->
+                <!-- View User Management -->
                 <section id="viewUserManagement" class="view-section hidden p-6 md:p-8">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">User Management</h2>
@@ -506,7 +519,6 @@
                             <option value="B2B Inbound">B2B Inbound</option>
                             <option value="Bazaar">Bazaar</option>
                             <option value="Dropship">Dropship</option>
-                            <!-- TAMPILAN TIM BARU -->
                             <option value="Return">Return</option>
                             <option value="Marketing">Marketing</option>
                         </select>
@@ -573,7 +585,6 @@
                             <option value="B2B Inbound">B2B Inbound</option>
                             <option value="Bazaar">Bazaar</option>
                             <option value="Dropship">Dropship</option>
-                            <!-- TAMPILAN TIM BARU -->
                             <option value="Return">Return</option>
                             <option value="Marketing">Marketing</option>
                         </select>
@@ -633,7 +644,6 @@
                             <option value="B2B Inbound">B2B Inbound</option>
                             <option value="Bazaar">Bazaar</option>
                             <option value="Dropship">Dropship</option>
-                            <!-- TAMPILAN TIM BARU -->
                             <option value="Return">Return</option>
                             <option value="Marketing">Marketing</option>
                         </select>
@@ -706,7 +716,6 @@
                             <option value="B2B Inbound">B2B Inbound</option>
                             <option value="Bazaar">Bazaar</option>
                             <option value="Dropship">Dropship</option>
-                            <!-- TAMPILAN TIM BARU -->
                             <option value="Return">Return</option>
                             <option value="Marketing">Marketing</option>
                         </select>
@@ -772,7 +781,6 @@
                         <option value="B2B Inbound">B2B Inbound</option>
                         <option value="Bazaar">Bazaar</option>
                         <option value="Dropship">Dropship</option>
-                        <!-- TAMPILAN TIM BARU -->
                         <option value="Return">Return</option>
                         <option value="Marketing">Marketing</option>
                     </select>
@@ -808,7 +816,7 @@
     </div>
     
     <!-- ========================================== -->
-    <!-- MODAL EDIT PROJECT (SUDAH DIROMBAK FULL) -->
+    <!-- MODAL EDIT PROJECT (STATUS & TAHAPAN OPERASIONAL DIGABUNG) -->
     <!-- ========================================== -->
     <div id="modalEditProject" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <!-- Backdrop transparan -->
@@ -840,8 +848,9 @@
                     </div>
                     
                     <div>
-                        <label class="block font-medium mb-1">Kategori</label>
-                        <select id="editProjKategori" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                        <label class="block font-medium mb-1">Kategori <span class="text-red-500">*</span></label>
+                        <select id="editProjKategori" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none text-gray-700 dark:text-gray-200">
+                            <option value="">Pilih Kategori</option>
                             <option value="Improvement Proses Gudang">Improvement Proses Gudang</option>
                             <option value="Automation Report">Automation Report</option>
                             <option value="Warehouse Optimization">Warehouse Optimization</option>
@@ -860,8 +869,9 @@
                     </div>
                     
                     <div>
-                        <label class="block font-medium mb-1">Team</label>
-                        <select id="editProjTeam" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                        <label class="block font-medium mb-1">Team <span class="text-red-500">*</span></label>
+                        <select id="editProjTeam" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none text-gray-700 dark:text-gray-200">
+                            <option value="">Pilih Team</option>
                             <option value="B2B Outbound">B2B Outbound</option>
                             <option value="B2B Inbound">B2B Inbound</option>
                             <option value="Bazaar">Bazaar</option>
@@ -871,14 +881,14 @@
                         </select>
                     </div>
                     
-                    <div>
-                        <label class="block font-medium mb-1">PIC (Penanggung Jawab)</label>
+                    <div class="md:col-span-2">
+                        <label class="block font-medium mb-1">PIC (Penanggung Jawab) <span class="text-red-500">*</span></label>
                         <input type="text" id="editProjPIC" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
                     </div>
 
                     <div>
-                        <label class="block font-medium mb-1">Priority</label>
-                        <select id="editProjPriority" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                        <label class="block font-medium mb-1">Priority <span class="text-red-500">*</span></label>
+                        <select id="editProjPriority" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none text-gray-700 dark:text-gray-200">
                             <option value="Low">Low</option>
                             <option value="Medium">Medium</option>
                             <option value="High">High</option>
@@ -886,29 +896,30 @@
                         </select>
                     </div>
                     
+                    <!-- Status & Tahapan Operasional (Digabung dengan persentase %) -->
                     <div>
-                        <label class="block font-medium mb-1">Tanggal Mulai</label>
+                        <label class="block font-medium mb-1">Status & Tahapan Operasional <span class="text-red-500">*</span></label>
+                        <select id="editProjStatus" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none text-gray-700 dark:text-gray-200">
+                            <option value="" disabled selected>Pilih Tahapan Operasional</option>
+                            <option value="Preparation (10%)">Preparation (10%)</option>
+                            <option value="Barang Masuk (25%)">Barang Masuk (25%)</option>
+                            <option value="Pengecekan Barang Masuk (40%)">Pengecekan Barang Masuk (40%)</option>
+                            <option value="On Going (60%)">On Going (60%)</option>
+                            <option value="Pengecekan Barang Balikan (75%)">Pengecekan Barang Balikan (75%)</option>
+                            <option value="Barang Keluar (85%)">Barang Keluar (85%)</option>
+                            <option value="Rekonsiliasi (95%)">Rekonsiliasi (95%)</option>
+                            <option value="Closed (100%)">Closed (100%)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-medium mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
                         <input type="date" id="editProjStartDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
                     </div>
                     
                     <div>
-                        <label class="block font-medium mb-1">Tanggal Selesai</label>
+                        <label class="block font-medium mb-1">Tanggal Selesai <span class="text-red-500">*</span></label>
                         <input type="date" id="editProjEndDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                    </div>
-
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
-                        <label class="block font-medium mb-1">Status Saat Ini</label>
-                        <select id="editProjStatus" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            <option value="Belum Dimulai">Belum Dimulai</option>
-                            <option value="On Progress">On Progress</option>
-                            <option value="Review">Review</option>
-                            <option value="Completed">Completed</option>
-                        </select>
-                    </div>
-
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
-                        <label class="block font-medium mb-1">Progress Pencapaian (%)</label>
-                        <input type="number" id="editProjProgress" min="0" max="100" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary outline-none">
                     </div>
                 </div>
                 
@@ -942,7 +953,6 @@
                         <option value="B2B Inbound">B2B Inbound</option>
                         <option value="Dropship">Dropship</option>
                         <option value="Leader Central">Leader Central</option>
-                        <!-- TAMPILAN TIM BARU -->
                         <option value="Return">Return</option>
                         <option value="Marketing">Marketing</option>
                     </select>
@@ -954,7 +964,6 @@
                         <option value="Leader Divisi">Leader Divisi</option>
                         <option value="Leader Central">Leader Central</option>
                         <option value="SPV">SPV</option>
-                        <!-- TAMPILAN ROLE BARU -->
                         <option value="Staff">Staff</option>
                         <option value="Intern">Intern</option>
                     </select>
@@ -967,7 +976,7 @@
         </div>
     </div>
 
-    <!-- Modal Ganti Password (Pastikan hanya ada satu) -->
+    <!-- Modal Ganti Password -->
     <div id="modalChangePassword" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
         <div class="bg-white dark:bg-darkBox p-6 rounded-2xl w-full max-w-sm shadow-2xl">
             <h2 class="text-lg font-bold mb-4 text-gray-800 dark:text-white">Ganti Password</h2>
