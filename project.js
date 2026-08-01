@@ -4,13 +4,41 @@ import { db } from './firebase.js';
 import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
-// 1. PENGECEKAN HAK AKSES (ROLE-BASED ACCESS)
+// 1. DEFINISI TAHAPAN OPERASIONAL (Ditambah step awal 0%)
+// ==========================================
+const operationalStages = [
+    { name: "Not Started", progress: 0 },
+    { name: "Preparation", progress: 10 },
+    { name: "Barang Masuk", progress: 25 },
+    { name: "Pengecekan Barang Masuk", progress: 40 },
+    { name: "On Running", progress: 60 },
+    { name: "Pengecekan Barang Balikan", progress: 75 },
+    { name: "Barang Keluar", progress: 85 },
+    { name: "Rekonsiliasi", progress: 95 },
+    { name: "Closed", progress: 100 }
+];
+
+// Helper untuk mencocokkan status/progress lama ke format dropdown baru
+function getMatchingStageValue(statusName, progressVal) {
+    if (progressVal !== undefined && progressVal !== null) {
+        const found = operationalStages.find(s => s.progress === Number(progressVal));
+        if (found) return `${found.name} (${found.progress}%)`;
+    }
+    if (statusName) {
+        const foundByName = operationalStages.find(s => s.name.toLowerCase() === statusName.toLowerCase());
+        if (foundByName) return `${foundByName.name} (${foundByName.progress}%)`;
+    }
+    return "Not Started (0%)";
+}
+
+// ==========================================
+// 2. PENGECEKAN HAK AKSES (ROLE-BASED ACCESS)
 // ==========================================
 const userRole = localStorage.getItem('userRole');
 const canEdit = (userRole === 'Leader Central' || userRole === 'SPV');
 
 // ==========================================
-// 2. REFERENSI ELEMEN DOM
+// 3. REFERENSI ELEMEN DOM
 // ==========================================
 const tableProjectBody = document.getElementById('tableProjectBody');
 const formAddProject = document.getElementById('formAddProject');
@@ -22,7 +50,7 @@ const filterTeamProj = document.getElementById('filterTeamProject');
 const filterStatusProj = document.getElementById('filterStatusProject');
 
 // ==========================================
-// 3. FITUR READ DATA
+// 4. FITUR READ DATA
 // ==========================================
 onSnapshot(collection(db, "projects"), (snapshot) => {
     tableProjectBody.innerHTML = '';
@@ -41,7 +69,6 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
         let actionButtons = '';
 
         if (canEdit) {
-            // Parameter window.openEditProject sekarang cukup melempar ID saja
             actionButtons = `
                 <div class="flex items-center justify-center gap-2">
                     <button onclick="window.openEditProject('${id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg flex items-center justify-center transition-colors text-xs font-bold" title="Update Project">
@@ -63,7 +90,7 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors project-row";
         tr.setAttribute('data-team', (data.team || '').toLowerCase());
-        tr.setAttribute('data-status', (data.status || 'Belum Dimulai').toLowerCase());
+        tr.setAttribute('data-status', (data.status || 'Not Started').toLowerCase());
 
         tr.innerHTML = `
             <td class="p-4 align-top font-bold text-blue-600 dark:text-blue-400">
@@ -87,10 +114,10 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
             <td class="p-4 align-top">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold 
-                        ${data.status === 'Completed' ? 'bg-green-100 text-green-600' : 
-                          data.status === 'On Progress' ? 'bg-blue-100 text-blue-600' : 
-                          data.status === 'Review' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600'}">
-                        ${data.status || 'Belum Dimulai'}
+                        ${data.status === 'Closed' || data.status === 'Completed' ? 'bg-green-100 text-green-600' : 
+                          data.status === 'On Running' || data.status === 'On Progress' ? 'bg-blue-100 text-blue-600' : 
+                          data.status === 'Rekonsiliasi' || data.status === 'Review' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600'}">
+                        ${data.status || 'Not Started'}
                     </span>
                 </div>
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-1">
@@ -109,7 +136,7 @@ onSnapshot(collection(db, "projects"), (snapshot) => {
 });
 
 // ==========================================
-// 4. FITUR CREATE DATA 
+// 5. FITUR CREATE DATA 
 // ==========================================
 if (btnTambahProject) {
     btnTambahProject.addEventListener('click', () => {
@@ -140,7 +167,7 @@ if (formAddProject) {
                 startDate: document.getElementById('projStartDate').value,
                 endDate: document.getElementById('projEndDate').value,
                 priority: document.querySelector('input[name="projPriority"]:checked').value,
-                status: 'Belum Dimulai',
+                status: 'Not Started',
                 progress: 0,
                 createdAt: serverTimestamp()
             });
@@ -161,9 +188,8 @@ if (formAddProject) {
 }
 
 // ==========================================
-// 5. FITUR UPDATE & DELETE
+// 6. FITUR UPDATE & DELETE
 // ==========================================
-// Fungsi Buka Modal Edit (Menarik Data Full dari Firebase)
 window.openEditProject = async (id) => {
     if (!canEdit) {
         Swal.fire('Akses Ditolak', 'Hanya SPV dan Leader Central yang dapat mengedit data.', 'error');
@@ -177,7 +203,6 @@ window.openEditProject = async (id) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
             
-            // Masukkan data ke dalam form edit
             document.getElementById('editProjId').value = id;
             document.getElementById('editProjNama').value = data.name || '';
             document.getElementById('editProjDeskripsi').value = data.description || '';
@@ -187,8 +212,10 @@ window.openEditProject = async (id) => {
             document.getElementById('editProjPriority').value = data.priority || 'Medium';
             document.getElementById('editProjStartDate').value = data.startDate || '';
             document.getElementById('editProjEndDate').value = data.endDate || '';
-            document.getElementById('editProjStatus').value = data.status || 'Belum Dimulai';
-            document.getElementById('editProjProgress').value = data.progress || 0;
+            
+            // Set value dropdown status gabungan dengan persentase
+            const matchedDropdownVal = getMatchingStageValue(data.status, data.progress);
+            document.getElementById('editProjStatus').value = matchedDropdownVal;
             
             modalEditProject.classList.remove('hidden');
         }
@@ -197,12 +224,10 @@ window.openEditProject = async (id) => {
     }
 };
 
-// Tutup Modal Edit
 document.querySelectorAll('#modalEditProject .btnCloseModal, #modalEditProject .modal-backdrop').forEach(el => {
     el.addEventListener('click', () => modalEditProject.classList.add('hidden'));
 });
 
-// Proses Simpan Perubahan Full Edit
 const formEditProject = document.getElementById('formEditProject');
 if (formEditProject) {
     formEditProject.addEventListener('submit', async (e) => {
@@ -216,6 +241,17 @@ if (formEditProject) {
         btnSubmit.disabled = true;
 
         try {
+            const fullStatusSelection = document.getElementById('editProjStatus').value;
+            
+            let statusText = "Not Started";
+            let progressVal = 0;
+
+            const match = fullStatusSelection.match(/^(.*?)\s*\((\d+)%\)$/);
+            if (match) {
+                statusText = match[1].trim();
+                progressVal = parseInt(match[2]);
+            }
+
             await updateDoc(doc(db, "projects", id), {
                 name: document.getElementById('editProjNama').value,
                 description: document.getElementById('editProjDeskripsi').value,
@@ -225,8 +261,8 @@ if (formEditProject) {
                 priority: document.getElementById('editProjPriority').value,
                 startDate: document.getElementById('editProjStartDate').value,
                 endDate: document.getElementById('editProjEndDate').value,
-                status: document.getElementById('editProjStatus').value,
-                progress: parseFloat(document.getElementById('editProjProgress').value),
+                status: statusText,
+                progress: progressVal,
                 lastUpdate: serverTimestamp()
             });
             
@@ -245,7 +281,6 @@ if (formEditProject) {
     });
 }
 
-// Fungsi Delete
 window.deleteProject = async (id) => {
     if (!canEdit) {
         Swal.fire('Akses Ditolak', 'Hanya SPV dan Leader Central yang dapat menghapus data.', 'error');
@@ -277,7 +312,7 @@ window.deleteProject = async (id) => {
 };
 
 // ==========================================
-// 6. FITUR FILTER PROJECT
+// 7. FITUR FILTER PROJECT
 // ==========================================
 function filterDataProject() {
     const teamTerm = filterTeamProj ? filterTeamProj.value.toLowerCase() : 'all';
