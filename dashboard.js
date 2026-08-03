@@ -127,7 +127,7 @@ const chartLine = new Chart(document.getElementById('chartLine').getContext('2d'
     options: commonOptions
 });
 
-const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Return', 'Marketing'];
+const chartLabels = ['B2B Outbound', 'B2B Inbound', 'Bazaar', 'Dropship', 'Return', 'Photoshoot-Merchant'];
 const chartColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
 
 const chartDoughnut = new Chart(document.getElementById('chartDoughnut').getContext('2d'), {
@@ -223,7 +223,7 @@ function updateDashboardMetrics() {
     let uniqueTeams = new Set();
     let uniquePics = new Set();
     
-    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Return': 4, 'Marketing': 5 };
+    const teamIndexMap = { 'B2B Outbound': 0, 'B2B Inbound': 1, 'Bazaar': 2, 'Dropship': 3, 'Return': 4, 'Photoshoot-Merchant': 5 };
     const chartBarData = { 'Not Started': [0,0,0,0,0,0], 'On Progress': [0,0,0,0,0,0], 'Review': [0,0,0,0,0,0], 'Completed': [0,0,0,0,0,0] };
     const chartPieData = [0,0,0,0,0,0]; 
     const chartWeeklyData = [0,0,0,0,0]; 
