@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Team Progress Management</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏭</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -222,7 +222,7 @@
                     <!-- Project Table Card -->
                     <div class="bg-white/80 dark:bg-darkBox/80 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
+                            <table class="w-full text-left border-collapse whitespace-nowrap">
                                 <thead>
                                     <tr class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
                                         <th class="p-4 font-semibold">ID Project</th>
@@ -328,20 +328,22 @@
                     </div>
 
                     <div class="bg-white dark:bg-darkBox rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th class="p-4">Nama</th>
-                                    <th class="p-4">Username</th>
-                                    <th class="p-4">Team</th>
-                                    <th class="p-4">Role</th>
-                                    <th class="p-4 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableUserBody" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                <!-- Data akan muncul di sini via JS -->
-                            </tbody>
-                        </table>
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs uppercase font-semibold">
+                                    <tr>
+                                        <th class="p-4">Nama</th>
+                                        <th class="p-4">Username</th>
+                                        <th class="p-4">Team</th>
+                                        <th class="p-4">Role</th>
+                                        <th class="p-4 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableUserBody" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                                    <!-- Data akan muncul di sini via JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -441,7 +443,8 @@
 
                     <!-- Table Preview -->
                     <div class="bg-white dark:bg-darkBox rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                        <div class="overflow-x-auto max-h-[60vh] no-scrollbar">
+                        <!-- HAPUS no-scrollbar DI SINI -->
+                        <div class="overflow-x-auto max-h-[60vh] custom-scrollbar">
                             <table id="tableExport" class="w-full text-left border-collapse">
                                 <thead id="repTableHead" class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs uppercase font-semibold sticky top-0">
                                 </thead>
@@ -816,7 +819,7 @@
     </div>
     
     <!-- ========================================== -->
-    <!-- MODAL EDIT PROJECT (STATUS & TAHAPAN OPERASIONAL DIGABUNG) -->
+    <!-- MODAL EDIT PROJECT -->
     <!-- ========================================== -->
     <div id="modalEditProject" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <!-- Backdrop transparan -->
@@ -1005,7 +1008,9 @@
                     <i class="fa-solid fa-xmark text-2xl"></i>
                 </button>
             </div>
-            <div class="overflow-x-auto overflow-y-auto flex-1 no-scrollbar rounded-lg border border-gray-200 dark:border-gray-700">
+            
+            <!-- HAPUS no-scrollbar DI SINI -->
+            <div class="overflow-x-auto overflow-y-auto flex-1 rounded-lg border border-gray-200 dark:border-gray-700 pb-2">
                 <table class="w-full text-left text-sm whitespace-nowrap">
                     <thead id="modalDetailHead" class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-semibold sticky top-0">
                         <!-- Header Tabel Injeksi JS -->
