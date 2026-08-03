@@ -473,7 +473,7 @@ window.showKpiDetail = (kpiId, kpiTitle) => {
                 if (d.endDate) {
                     const daysLate = getDaysLate(d.endDate);
                     if (daysLate > 0) {
-                        delayText = `<span class="bg-red-100 text-red-600 px-2.5 py-1 rounded-md text-xs font-bold border border-red-200">Terlambat ${daysLate} Hari dari Target</span>`;
+                        delayText = `<span class="bg-red-100 text-red-600 px-2.5 py-1 rounded-md text-xs font-bold border border-red-200"> ${daysLate} Hari dari Project Selesai</span>`;
                     } else if (daysLate === 0) {
                         delayText = `<span class="bg-orange-100 text-orange-600 px-2.5 py-1 rounded-md text-xs font-bold border border-orange-200">Deadline Hari Ini</span>`;
                     } else {
